@@ -1,0 +1,11 @@
+module Program
+
+import Basics exposing *
+import String exposing (String)
+import List exposing (List)
+
+type Program = extern
+
+type ScriptFn = (args: List[String] -> Int)
+
+def script: (fn: ScriptFn -> Program) = extern
