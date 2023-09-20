@@ -2,7 +2,7 @@ package program
 
 import "github.com/oaklang/core"
 
-type Program_Program func() int
+definedType Program_Program func() int
 
 func Program_script(fn Program_ScriptFn) Program_Program {
 	return func() int {

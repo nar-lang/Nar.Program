@@ -1,0 +1,11 @@
+module Program
+
+import "core/Basics.oak" exposing *
+import "core/String.oak" exposing (String)
+import "core/List.oak" exposing (List)
+
+alias Program = extern
+
+alias ScriptFn = (List[String]):Int
+
+def script(fn: ScriptFn): Program = extern

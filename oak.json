@@ -1,8 +1,0 @@
-{
-  "author": "github.com/oaklang",
-  "name": "program",
-  "version": "0.1.0",
-  "dependencies": {
-    "github.com/oaklang/core": "../core"
-  }
-}
