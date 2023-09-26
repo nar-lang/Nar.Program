@@ -1,4 +1,4 @@
-module Program
+module oak.program/Program
 
 import "core/Basics.oak" exposing *
 import "core/String.oak" exposing (String)
