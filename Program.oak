@@ -4,7 +4,7 @@ import "core/Basics.oak" exposing *
 import "core/String.oak" exposing (String)
 import "core/List.oak" exposing (List)
 
-alias Program = extern
+alias extern Program
 
 alias ScriptFn = (List[String]):Int
 
