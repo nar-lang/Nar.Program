@@ -8,4 +8,4 @@ alias extern Program
 
 alias ScriptFn = (List[String]):Int
 
-def script(fn: ScriptFn): Program = extern
+def extern script(fn: ScriptFn): Program
