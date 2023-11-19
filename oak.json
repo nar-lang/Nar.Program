@@ -1,0 +1,8 @@
+{
+  "name": "Oak.Program",
+  "version": "1.0",
+  "oak-version": "0.1",
+  "dependencies": [
+    "git@github.com:oaklang/Oak.Core.git"
+  ]
+}

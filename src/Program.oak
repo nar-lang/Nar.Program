@@ -1,8 +1,8 @@
 module Oak.Program.Program
 
-import "core/Basics.oak" exposing *
-import "core/String.oak" exposing (String)
-import "core/List.oak" exposing (List)
+import Oak.Core.Basics exposing *
+import Oak.Core.String exposing (String)
+import Oak.Core.List exposing (List)
 
 alias extern Program
 
