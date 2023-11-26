@@ -1,4 +1,4 @@
-module Oak.Program.Program
+module Oak.Program
 
 import Oak.Core.Basics exposing *
 import Oak.Core.String exposing (String)
