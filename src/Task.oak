@@ -1,0 +1,65 @@
+module Oak.Program.Task
+
+alias native Task[failure, success]
+
+def native succeed(result: a): Task[x, a]
+
+def native fail(error:x): Task[x, a]
+
+def map(func: (a):b, taskA: Task[x, a]): Task[x, b] =
+  taskA
+    |> andThen(\(a) -> succeed(func(a)))
+
+def map2(func: (a, b):result, taskA: Task[x, a], taskB: Task[x, b]): Task[x, result] =
+  taskA
+    |> andThen(\(a) -> taskB
+      |> andThen(\(b) -> succeed(func(a, b))))
+
+def map3(func: (a, b, c): result, taskA: Task[x, a], taskB: Task[x, b], taskC: Task[x, c]): Task[x, result] =
+  taskA
+    |> andThen(\(a) -> taskB
+      |> andThen(\(b) -> taskC
+        |> andThen(\(c) -> succeed(func(a, b, c)))))
+
+def map4(
+  func: (a, b, c, d): result, taskA: Task[x, a], taskB: Task[x, b], taskC: Task[x, c], taskD: Task[x, d]
+): Task[x, result] =
+  taskA
+    |> andThen(\(a) -> taskB
+      |> andThen(\(b) -> taskC
+        |> andThen(\(c) -> taskD
+          |> andThen(\(d) -> succeed(func(a, b, c, d))))))
+
+def map4(
+  func: (a, b, c, d, e): result,
+  taskA: Task[x, a], taskB: Task[x, b], taskC: Task[x, c], taskD: Task[x, d], taskE: Task[x, e]
+): Task[x, result] =
+  taskA
+    |> andThen(\(a) -> taskB
+      |> andThen(\(b) -> taskC
+        |> andThen(\(c) -> taskD
+          |> andThen(\(d) -> taskE
+            |> andThen(\(e) -> succeed(func(a, b, c, d, e)))))))
+
+def sequence(tasks: List[Task[x, a]]): Task[x, List[a]] =
+  List.foldr(map2((|)), succeed([]), tasks)
+
+def native andThen(f: (a):Task[x, b], task: Task[x, a]): Task[x, b]
+
+def native onError(f: (x): Task[y, a], task: Task[x, a]): Task[y, a]
+
+def mapError(convert: (x): y, task: Task[x, a]): Task[y, a] =
+  task
+    |> onError(fail <~ convert)
+
+def perform(toMessage: (a): msg, task: Task[Never, a]): Cmd[msg] =
+  task |>
+    attempt(
+      \(r) ->
+        select r
+          case Ok(v) -> toMessage(v)
+          case Err(e) -> Debug.todo("should not happen")
+        end
+    )
+
+def native attempt(resultToMessage: (Result[x, a]):msg, task: Task[x, a]): Cmd[msg]

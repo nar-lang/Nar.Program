@@ -1,11 +1,14 @@
 module Oak.Program
 
-import Oak.Core.Basics exposing *
-import Oak.Core.String exposing (String)
-import Oak.Core.List exposing (List)
+alias native Program[flags, model, view, msg]
 
-alias extern Program
+def native application(lifecycle:
+  { init : (flags): ( model, Cmd[msg] )
+  , view : (model): view
+  , present: (view): ()
+  , update : (msg, model): ( model, Cmd[msg] )
+  , subscriptions : (model): Sub[msg]
+  }
+): Program[flags, model, msg]
 
-alias ScriptFn = (List[String]):Int
-
-def extern script(fn: ScriptFn): Program
+def native execute(program: Program[List[String], model, msg]): Int

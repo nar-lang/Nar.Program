@@ -1,0 +1,16 @@
+module Oak.Program.TextPresenter
+
+type StdOut
+  = PrintLn(String)
+
+def stdOut(view: List[StdOut]): () =
+  List.foldl(
+    \(v, _) ->
+      select v
+        case PrintLn(text) -> println(text)
+      end
+    , ()
+    , view
+  )
+
+def hidden native println(s: String): ()

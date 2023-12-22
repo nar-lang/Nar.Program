@@ -1,0 +1,9 @@
+module Oak.Program.Cmd
+
+alias native Cmd[msg]
+
+def none : Cmd[msg] = batch([])
+
+def native batch(ls: List[Cmd[msg]]): Cmd[msg]
+
+def native map(f: (a): msg, cmd: Cmd[a]): Cmd[msg]

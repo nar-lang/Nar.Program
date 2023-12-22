@@ -1,0 +1,9 @@
+module Oak.Program.Sub
+
+alias native Sub[msg]
+
+def none : Sub[msg] = batch([])
+
+def native batch(ls: List[Sub[msg]]): Sub[msg]
+
+def native map(f: (a): msg, sub: Sub[a]): Sub[msg]
