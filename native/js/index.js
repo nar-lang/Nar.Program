@@ -85,6 +85,8 @@ export default function (runtime) {
         return runtime.native(exec);
     }
 
+    runtime.scope("Oak.Program", {newCmd, newTask})
+
     runtime.register("Oak.Program.Cmd", {
         "batch": (_ls) => {
             const cmds = runtime.unwrapShallow(_ls);
@@ -184,6 +186,4 @@ export default function (runtime) {
             });
         }
     });
-
-    runtime.scope("Oak.Program", {newCmd, newTask})
 }

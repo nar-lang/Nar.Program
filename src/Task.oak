@@ -62,4 +62,4 @@ def perform(toMessage: (a): msg, task: Task[Never, a]): Cmd[msg] =
         end
     )
 
-def native attempt(resultToMessage: (Result[x, a]):msg, task: Task[x, a]): Cmd[msg]
+def native attempt(resultToMessage: (Result[Never, a]):msg, task: Task[Never, a]): Cmd[msg]
