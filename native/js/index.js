@@ -1,17 +1,9 @@
 export default function (runtime) {
-    const program = {
-        opt: {},
-        msgs: [],
-        subs: [],
-        cmds: [],
-        model: null,
-    }
-
-    let cycleScheduled = false;
-
-    function postMsg(msg) {
-        program.msgs.push(msg);
-        scheduleCycle();
+    /**
+     * @param {function(success:function(_result), fail:function(_error))} exec
+     */
+    function newTask(exec) {
+        return runtime.native(exec);
     }
 
     /**
@@ -25,6 +17,36 @@ export default function (runtime) {
             toMsg: (_data) => runtime.executeFn(_toMsg, [_data]),
             exec
         }]);
+    }
+
+    /**
+     * @param {string} id
+     * @param {[Readonly<{}>]} args
+     * @param {Readonly<{}>} _toMsg oak function that converts data to a message
+     * @param {function(args: [Readonly<{}>], post:function(data)):function} subscribe returns unsubscribe
+     */
+    function newSub(id, args, _toMsg, subscribe) {
+        return runtime.native([{
+            id,
+            args,
+            toMsg: (_data) => runtime.executeFn(_toMsg, [_data]),
+            sub: subscribe
+        }]);
+    }
+
+    const program = {
+        opt: {},
+        msgs: [],
+        subs: [],
+        cmds: [],
+        model: null,
+    }
+
+    let cycleScheduled = false;
+
+    function postMsg(msg) {
+        program.msgs.push(msg);
+        scheduleCycle();
     }
 
     function init() {
@@ -52,6 +74,39 @@ export default function (runtime) {
         program.cmds = [];
     }
 
+    function subscribe() {
+        const _newSubs = runtime.executeFn(program.opt.subscribe, [program.model]);
+        const newSubs = runtime.unwrapShallow(_newSubs);
+        const nextSubs = [];
+        const cmpList = runtime.scope("Oak.Core").cmpList;
+        for (let i = 0; i < newSubs.length; i++) {
+            let newSub = newSubs[i];
+            let survived = false;
+            for (let j = 0; j < program.subs.length; j++) {
+                let sub = program.subs[j];
+                if (sub.id === newSub.id && cmpList(sub.args, newSub.args) === 0) {
+                    nextSubs.push(sub);
+                    program.subs[j] = null;
+                    survived = true;
+                    break;
+                }
+            }
+            if (!survived) {
+                nextSubs.push(newSub);
+                newSub.unsub = newSub.sub(newSub.args, data => {
+                    postMsg(newSub.toMsg(data));
+                });
+            }
+        }
+        for (let j = 0; j < program.subs.length; j++) {
+            let sub = program.subs[j];
+            if (sub !== null) {
+                sub.unsub();
+            }
+        }
+        program.subs = nextSubs;
+    }
+
     function viewAndPresent() {
         const view = runtime.executeFn(program.opt.view, [program.model]);
         runtime.executeFn(program.opt.present, [view]);
@@ -63,6 +118,7 @@ export default function (runtime) {
             flushMessages();
             flushCommands();
         }
+        subscribe();
         viewAndPresent();
     }
 
@@ -78,14 +134,7 @@ export default function (runtime) {
         postMsg(msg);
     }
 
-    /**
-     * @param {function(success:function(_result), fail:function(_error))} exec
-     */
-    function newTask(exec) {
-        return runtime.native(exec);
-    }
-
-    runtime.scope("Oak.Program", {newCmd, newTask})
+    runtime.scope("Oak.Program", {newCmd, newTask, newSub})
 
     runtime.register("Oak.Program.Cmd", {
         "batch": (_ls) => {
@@ -106,28 +155,19 @@ export default function (runtime) {
     });
     runtime.register("Oak.Program.Sub", {
         "batch": (_ls) => {
-            return runtime.native(runtime.unwrapShallow(_ls));
+            const subs = runtime.unwrapShallow(_ls);
+            return runtime.native(subs.flat());
         },
-        "map": (_fn, _ls) => {
-            return runtime.native(
-                _ls.value.map(x => Object.freeze({
-                    sub: x.cmd,
-                    maps: [...x.maps, _fn]
-                }))
-            );
-        }
-    });
-    runtime.register("Oak.Program.Msg", {
-        "batch": (_ls) => {
-            return runtime.native(runtime.unwrapShallow(_ls));
-        },
-        "map": (_fn, _ls) => {
-            return runtime.native(
-                _ls.value.map(x => Object.freeze({
-                    cmd: x.cmd,
-                    maps: [...x.maps, _fn]
-                }))
-            );
+        "map": (_fn, _sub) => {
+            const subs = runtime.unwrap(_sub);
+            const mapped = subs.map(sub => ({
+                unsub: sub.unsub,
+                toMsg: (_data) => {
+                    _data = sub.toMsg(_data);
+                    runtime.executeFn(_fn, [_data]);
+                }
+            }));
+            return runtime.native(mapped);
         }
     });
     runtime.register("Oak.Program", {

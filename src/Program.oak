@@ -7,7 +7,7 @@ def native application(lifecycle:
   , view : (model): view
   , present: (view): ()
   , update : (msg, model): ( model, Cmd[msg] )
-  , subscriptions : (model): Sub[msg]
+  , subscribe : (model): Sub[msg]
   }
 ): Program[flags, model, msg]
 
