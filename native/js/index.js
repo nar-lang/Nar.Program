@@ -7,7 +7,7 @@ export default function (runtime) {
     }
 
     /**
-     * @param {Readonly<{}>} _toMsg oak function that converts data to a message
+     * @param {Readonly<{}>} _toMsg  function that converts data to a message
      * @param {function(post:function(data))} exec function that executes the command posts the data,
      * which will be converted to a message and dispatched to update
      * @return {*}
@@ -22,7 +22,7 @@ export default function (runtime) {
     /**
      * @param {string} id
      * @param {[Readonly<{}>]} args
-     * @param {Readonly<{}>} _toMsg oak function that converts data to a message
+     * @param {Readonly<{}>} _toMsg  function that converts data to a message
      * @param {function(args: [Readonly<{}>], post:function(data)):function} subscribe returns unsubscribe
      */
     function newSub(id, args, _toMsg, subscribe) {
@@ -78,7 +78,7 @@ export default function (runtime) {
         const _newSubs = runtime.executeFn(program.opt.subscribe, [program.model]);
         const newSubs = runtime.unwrapShallow(_newSubs);
         const nextSubs = [];
-        const cmpList = runtime.scope("Oak.Core").cmpList;
+        const cmpList = runtime.scope("Nar.Core").cmpList;
         for (let i = 0; i < newSubs.length; i++) {
             let newSub = newSubs[i];
             let survived = false;
@@ -134,9 +134,9 @@ export default function (runtime) {
         postMsg(msg);
     }
 
-    runtime.scope("Oak.Program", {newCmd, newTask, newSub})
+    runtime.scope("Nar.Program", {newCmd, newTask, newSub})
 
-    runtime.register("Oak.Program.Cmd", {
+    runtime.register("Nar.Program.Cmd", {
         "batch": (_ls) => {
             const cmds = runtime.unwrapShallow(_ls);
             return runtime.native(cmds.flat());
@@ -153,7 +153,7 @@ export default function (runtime) {
             return runtime.native(mapped);
         }
     });
-    runtime.register("Oak.Program.Sub", {
+    runtime.register("Nar.Program.Sub", {
         "batch": (_ls) => {
             const subs = runtime.unwrapShallow(_ls);
             return runtime.native(subs.flat());
@@ -170,7 +170,7 @@ export default function (runtime) {
             return runtime.native(mapped);
         }
     });
-    runtime.register("Oak.Program", {
+    runtime.register("Nar.Program", {
         "application": (_opt) => {
             return runtime.native(runtime.unwrapShallow(_opt));
         },
@@ -181,13 +181,13 @@ export default function (runtime) {
             return runtime.int(0); //TODO: return exit code
         }
     })
-    runtime.register("Oak.Program.TextPresenter", {
+    runtime.register("Nar.Program.TextPresenter", {
         "println": (_text) => {
             console.log(runtime.unwrap(_text));
             return runtime.unit();
         }
     });
-    runtime.register("Oak.Program.Task", {
+    runtime.register("Nar.Program.Task", {
         "succeed": (_result) => newTask((success, _) => success(_result)),
         "fail": (_error) => newTask((_, fail) => fail(_error)),
         "andThen": (_fn, _task) => {
@@ -220,8 +220,8 @@ export default function (runtime) {
             const task = runtime.unwrap(_task);
             return newCmd(_toMsg, (post) => {
                 task(
-                    (_result) => post(runtime.optionShallow("Oak.Core.Result.Result", "Ok", [_result])),
-                    (_error) => post(runtime.optionShallow("Oak.Core.Result.Result", "Err", [_error]))
+                    (_result) => post(runtime.optionShallow("Nar.Core.Result.Result", "Ok", [_result])),
+                    (_error) => post(runtime.optionShallow("Nar.Core.Result.Result", "Err", [_error]))
                 )
             });
         }

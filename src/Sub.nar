@@ -1,4 +1,4 @@
-module Oak.Program.Sub
+module Nar.Program.Sub
 
 alias native Sub[msg]
 

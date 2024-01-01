@@ -1,4 +1,4 @@
-module Oak.Program.Task
+module Nar.Program.Task
 
 alias native Task[failure, success]
 

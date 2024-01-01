@@ -1,4 +1,4 @@
-module Oak.Program.Cmd
+module Nar.Program.Cmd
 
 alias native Cmd[msg]
 

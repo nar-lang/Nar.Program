@@ -1,4 +1,4 @@
-module Oak.Program
+module Nar.Program
 
 alias native Program[flags, model, view, msg]
 
