@@ -78,7 +78,7 @@ export default function (runtime) {
         const _newSubs = runtime.executeFn(program.opt.subscribe, [program.model]);
         const newSubs = runtime.unwrapShallow(_newSubs);
         const nextSubs = [];
-        const cmpList = runtime.scope("Nar.Core").cmpList;
+        const cmpList = runtime.scope("Nar.Base").cmpList;
         for (let i = 0; i < newSubs.length; i++) {
             let newSub = newSubs[i];
             let survived = false;
@@ -220,8 +220,8 @@ export default function (runtime) {
             const task = runtime.unwrap(_task);
             return newCmd(_toMsg, (post) => {
                 task(
-                    (_result) => post(runtime.optionShallow("Nar.Core.Result.Result", "Ok", [_result])),
-                    (_error) => post(runtime.optionShallow("Nar.Core.Result.Result", "Err", [_error]))
+                    (_result) => post(runtime.optionShallow("Nar.Base.Result.Result", "Ok", [_result])),
+                    (_error) => post(runtime.optionShallow("Nar.Base.Result.Result", "Err", [_error]))
                 )
             });
         }
