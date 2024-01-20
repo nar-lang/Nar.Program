@@ -1,7 +1,7 @@
 {
   "name": "Nar.Program",
   "version": "1.0",
-  "nar-version": "0.1",
+  "nar-version": "1.0",
   "dependencies": [
     "github.com/nar-lang/Nar.Base"
   ]
