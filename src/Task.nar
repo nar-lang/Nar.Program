@@ -30,7 +30,7 @@ def map4(
         |> andThen(\(c) -> taskD
           |> andThen(\(d) -> succeed(func(a, b, c, d))))))
 
-def map4(
+def map5(
   func: (a, b, c, d, e): result,
   taskA: Task[x, a], taskB: Task[x, b], taskC: Task[x, c], taskD: Task[x, d], taskE: Task[x, e]
 ): Task[x, result] =

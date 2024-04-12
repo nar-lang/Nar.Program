@@ -1,14 +1,18 @@
 module Nar.Program
 
-alias native Program[flags, model, view, msg]
+type Program[flags, model, msg, view]
+  = hidden Program(Lifecycle[flags, model, msg, view])
 
-def native application(lifecycle:
-  { init : (flags): ( model, Cmd[msg] )
-  , view : (model): view
+alias Lifecycle[flags, model, msg, view] =
+  { flags: flags
+  , init: (flags): ( model, List[Cmd[msg]] )
+  , view: (model): view
   , present: (view): ()
-  , update : (msg, model): ( model, Cmd[msg] )
-  , subscribe : (model): Sub[msg]
+  , update: (msg, model): ( model, List[Cmd[msg]] )
+  , subscribe: (model): List[Sub[msg]]
   }
-): Program[flags, model, msg]
 
-def native execute(program: Program[List[String], model, msg]): Int
+def application(lifecycle: Lifecycle[flags, model, msg, view]): Program[flags, model, msg, view] =
+  Program(lifecycle)
+
+def native exit(code: Int): Cmd[msg]

@@ -2,8 +2,8 @@ module Nar.Program.Cmd
 
 alias native Cmd[msg]
 
-def none : Cmd[msg] = batch([])
+def native pass(msg: msg): Cmd[msg]
 
-def native batch(ls: List[Cmd[msg]]): Cmd[msg]
+def native passValue(toMsg: (a):msg, value: a): Cmd[msg]
 
-def native map(f: (a): msg, cmd: Cmd[a]): Cmd[msg]
+def native map(f: (a): msg, cmds: List[Cmd[a]]): List[Cmd[msg]]
