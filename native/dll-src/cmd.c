@@ -1,42 +1,34 @@
 #include "_package.h"
 
-nar_object_t cmd_new(nar_runtime_t rt, cmd_exec_fn_t exec, nar_object_t to_msg, nar_object_t arg) {
-    return nar->make_tuple(rt, 3,
-            (nar_object_t[]) {
-                    nar->make_native(rt, exec, NULL),
-                    nar->make_list(rt, 1, &to_msg),
-                    arg,
-            });
-}
-
-void cmd_pass_exec(
-        nar_runtime_t rt, nar_object_t data, cmd_callback_fn_t callback, void *cmd_state) {
-    callback(rt, data, cmd_state);
-}
-
-nar_object_t cmd_pass(nar_runtime_t rt, nar_object_t msg) {
-    return cmd_new(rt, cmd_pass_exec, msg, NAR_INVALID_OBJECT);
-}
-
-nar_object_t cmd_passValue(nar_runtime_t rt, nar_object_t to_msg, nar_object_t value) {
-    return cmd_new(rt, cmd_pass_exec, to_msg, value);
+nar_object_t cmd_new(
+        nar_runtime_t rt,
+        nar_object_t to_msg,
+        nar_program_cmd_exec_fn_t cmd_exec,
+        void *user_data) {
+    cmd_t *cmd = nar->frame_alloc(rt, sizeof(cmd_t));
+    cmd->exec = cmd_exec;
+    cmd->user_data = user_data;
+    cmd->to_msg_list = nar->make_list(rt, 1, &to_msg);
+    return nar->make_native(rt, cmd, NULL);
 }
 
 nar_object_t cmd_map(nar_runtime_t rt, nar_object_t f, nar_object_t cmds) {
-    if (!nar->index_is_valid(rt, cmds)) {
-        return nar->make_list(rt, 0, NULL);
-    }
-    nar_list_item_t cmd_item = nar->to_list_item(rt, cmds);
-    nar_tuple_item_t cmd_exec = nar->to_tuple_item(rt, cmd_item.value);
-    nar_tuple_item_t cmd_to_msg = nar->to_tuple_item(rt, cmd_item.next);
-    nar_tuple_item_t cmd_arg = nar->to_tuple_item(rt, cmd_to_msg.next);
+    nar_object_t it = cmds;
 
-    return nar->make_list_cons(rt,
-            nar->make_tuple(rt, 3,
-                    (nar_object_t[]) {
-                            cmd_exec.value,
-                            nar->make_list_cons(rt, f, cmd_to_msg.value),
-                            cmd_arg.value,
-                    }),
-            cmd_map(rt, f, cmd_item.next));
+    vector_t *v = nvector_new(sizeof(nar_object_t), 0, nar);
+
+    while (nar->index_is_valid(rt, it)) {
+        nar_list_item_t item = nar->to_list_item(rt, it);
+        cmd_t *cmd = nar->to_native(rt, item.value).ptr;
+        cmd_t *new_cmd = nar->frame_alloc(rt, sizeof(cmd_t));
+        *new_cmd = *cmd;
+        new_cmd->to_msg_list = nar->make_list_cons(rt, f, cmd->to_msg_list);
+        nar_object_t new_cmd_obj = nar->make_native(rt, new_cmd, NULL);
+        vector_push(v, 1, &new_cmd_obj);
+        it = item.next;
+    }
+
+    nar_object_t list = nar->make_list(rt, v->size, v->data);
+    vector_free(v);
+    return list;
 }

@@ -19,6 +19,7 @@ add_library(Nar.Program SHARED
         program.c
         sub.c
         task.c
+        lifecycle.c
         include/Nar.Program.h
 )
 
