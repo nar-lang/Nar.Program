@@ -16,3 +16,5 @@ def application(lifecycle: Lifecycle[flags, model, msg, view]): Program[flags, m
   Program(lifecycle)
 
 def native exit(code: Int): Cmd[msg]
+
+def native args: List[String]

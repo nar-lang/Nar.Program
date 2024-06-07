@@ -13,6 +13,7 @@ project(
 )
 
 add_library(Nar.Program SHARED
+        include/Nar.Program.h
         _package.c
         _package.h
         cmd.c
@@ -20,7 +21,6 @@ add_library(Nar.Program SHARED
         sub.c
         task.c
         lifecycle.c
-        include/Nar.Program.h
 )
 
 target_include_directories(Nar.Program PRIVATE ~/.nar/include)

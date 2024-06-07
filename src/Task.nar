@@ -44,9 +44,9 @@ def map5(
 def sequence(tasks: List[Task[x, a]]): Task[x, List[a]] =
   List.foldr(map2((|)), succeed([]), tasks)
 
-def native andThen(f: (a):Task[x, b], task: Task[x, a]): Task[x, b]
+def native andThen(nextTask: (a): Task[x, b], task: Task[x, a]): Task[x, b]
 
-def native onError(f: (x): Task[y, a], task: Task[x, a]): Task[y, a]
+def native onError(nextTask: (x): Task[y, a], task: Task[x, a]): Task[y, a]
 
 def mapError(convert: (x): y, task: Task[x, a]): Task[y, a] =
   task
@@ -62,4 +62,4 @@ def perform(toMessage: (a): msg, task: Task[Never, a]): Cmd[msg] =
         end
     )
 
-def native attempt(resultToMessage: (Result[Never, a]):msg, task: Task[Never, a]): Cmd[msg]
+def native attempt(resultToMessage: (Result[x, a]):msg, task: Task[x, a]): Cmd[msg]
