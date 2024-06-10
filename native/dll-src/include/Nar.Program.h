@@ -11,7 +11,9 @@
 #define NAR_META__Nar_Program_cmd_new "Nar.Program:cmd_new"
 #define NAR_META__Nar_Program_sub_new "Nar.Program:sub_new"
 #define NAR_META__Nar_Program_task_new "Nar.Program:task_new"
-#define NAR_META__Nar_Program_flush "Nar.Program:flush"
+#define NAR_META__Nar_Program_update "Nar.Program:update"
+#define NAR_META__Nar_Program_updater_add "Nar.Program:updater_add"
+#define NAR_META__Nar_Program_updater_remove "Nar.Program:updater_remove"
 
 typedef void (*nar_program_set_args_fn_t)(
         nar_runtime_t rt, int argc, char **argv);
@@ -20,13 +22,9 @@ typedef void (*nar_program_exit_cb_t)(
         nar_runtime_t rt,
         nar_int_t exit_code);
 
-typedef void (*nar_program_main_update_cb_t)(
-        nar_runtime_t rt);
-
 typedef int (*nar_program_execute_fn_t)(
         nar_runtime_t rt,
         nar_object_t program,
-        nar_program_main_update_cb_t update,
         nar_program_exit_cb_t exit);
 
 typedef struct {
@@ -78,8 +76,18 @@ typedef nar_object_t (*nar_program_sub_new_fn_t)(
         nar_program_sub_on_fn_t on,
         nar_program_sub_off_fn_t off);
 
-typedef void (*nar_program_flush_fn_t)(
+
+typedef nar_bool_t (*nar_program_update_cb_fn_t)(
         nar_runtime_t rt);
+
+typedef void (*nar_program_updater_add_t)(
+        nar_runtime_t rt,
+        nar_program_update_cb_fn_t update,
+        nar_int_t priority);
+
+typedef void (*nar_program_updater_remove_t)(
+        nar_runtime_t rt,
+        nar_program_update_cb_fn_t update);
 
 typedef void (*nar_task_state_complete_fn_t)(
         nar_runtime_t rt,

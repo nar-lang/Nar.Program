@@ -32,6 +32,18 @@ void state_free(nar_runtime_t rt) {
         nar->free(state);
         nar->set_metadata(rt, NAR_META__Nar_Program__state, NULL);
     }
+
+    args_t *args = nar->get_metadata(rt, NAR_META__Nar_Program__args);
+    if (args != NULL) {
+        nar->free(args);
+        nar->set_metadata(rt, NAR_META__Nar_Program__args, NULL);
+    }
+
+    vector_t *updaters = nar->get_metadata(rt, NAR_META__Nar_Program__updaters);
+    if (updaters != NULL) {
+        vector_free(updaters);
+        nar->set_metadata(rt, NAR_META__Nar_Program__updaters, NULL);
+    }
 }
 
 void enqueue_message(nar_runtime_t rt, nar_object_t msg) {
@@ -69,12 +81,13 @@ void trigger_sub(nar_runtime_t rt, nar_object_t value, nar_sub_state_t *sub_stat
 }
 
 void process_sub(nar_runtime_t rt, state_t *state, nar_object_t sub_object) {
-    sub_t *sub = nar->to_native(rt, sub_object).ptr;
+    nar_tuple_t sub = nar->to_tuple(rt, sub_object);
     nar_sub_state_t *sub_state = nar->alloc(sizeof(nar_sub_state_t));
-    sub_state->to_msg_list = nar->new_serialized_object(rt, sub->to_msg_list);
-    sub_state->off = sub->off;
-    sub_state->payload = nar->new_serialized_object(rt, sub->payload);
-    sub->on(rt, sub->payload, trigger_sub, sub_state);
+    sub_state->to_msg_list = nar->new_serialized_object(rt, sub.values[0]);
+    sub_state->off = nar->to_native(rt, sub.values[3]).ptr;
+    sub_state->payload = nar->new_serialized_object(rt, sub.values[1]);
+    nar_program_sub_on_fn_t on = nar->to_native(rt, sub.values[2]).ptr;
+    on(rt, sub.values[1], trigger_sub, sub_state);
     vector_push(state->subs, 1, &sub_state);
 }
 
@@ -217,7 +230,7 @@ nar_serialized_object_t to_serialized_closure(
     return NULL;
 }
 
-void set_args(nar_runtime_t rt, int argc, char **argv) {
+void meta__set_args(nar_runtime_t rt, int argc, char **argv) {
     args_t *args = nar->get_metadata(rt, NAR_META__Nar_Program__args);
     if (args == NULL) {
         args = nar->alloc(sizeof(args_t));
@@ -227,10 +240,9 @@ void set_args(nar_runtime_t rt, int argc, char **argv) {
     nar->set_metadata(rt, NAR_META__Nar_Program__args, args);
 }
 
-int execute(
+int meta__execute(
         nar_runtime_t rt,
         nar_object_t program,
-        nar_program_main_update_cb_t update_cb,
         nar_program_exit_cb_t exit_cb) {
     if (nar->object_get_kind(rt, program) != NAR_OBJECT_KIND_OPTION) {
         return -1;
@@ -277,17 +289,63 @@ int execute(
 
     step(rt, state);
 
-    if (update_cb != NULL) {
+    if (exit_cb == NULL) {
         while (state->alive) {
-            update_cb(rt);
-            flush(rt);
+            meta__update(rt);
         }
     }
     return state->exit_code;
 }
 
-nar_bool_t flush(nar_runtime_t rt) {
+nar_bool_t meta__update(nar_runtime_t rt) {
+    vector_t *updaters = nar->get_metadata(rt, NAR_META__Nar_Program__updaters);
+    nar_bool_t keep_alive = nar_true;
+    if (updaters != NULL) {
+        size_t n = vector_size(updaters);
+        for (size_t i = 0; i < n; i++) {
+            const updater_t *u = vector_at(updaters, i);
+            keep_alive &= u->update(rt);
+        }
+    }
+
     state_t *state = nar->get_metadata(rt, NAR_META__Nar_Program__state);
+    if (!keep_alive) {
+        state->alive = false;
+    }
+
     step(rt, state);
     return state->alive;
+}
+
+void meta__updater_add(nar_runtime_t rt, nar_program_update_cb_fn_t update, nar_int_t priority) {
+    vector_t *updaters = nar->get_metadata(rt, NAR_META__Nar_Program__updaters);
+    if (updaters == NULL) {
+        updaters = nvector_new(sizeof(updater_t), 0, nar);
+        nar->set_metadata(rt, NAR_META__Nar_Program__updaters, updaters);
+    }
+
+    updater_t updater = {.update = update, .priority = priority};
+    size_t index = 0;
+    for (; index < vector_size(updaters); index++) {
+        const updater_t *u = vector_at(updaters, index);
+        if (u->priority < priority) {
+            break;
+        }
+    }
+    vector_insert(updaters, index, 1, &updater);
+}
+
+void meta__updater_remove(nar_runtime_t rt, nar_program_update_cb_fn_t update) {
+    vector_t *updaters = nar->get_metadata(rt, NAR_META__Nar_Program__updaters);
+    if (updaters == NULL) {
+        return;
+    }
+
+    for (size_t i = 0; i < vector_size(updaters); i++) {
+        const updater_t *u = vector_at(updaters, i);
+        if (u->update == update) {
+            vector_remove(updaters, i);
+            return;
+        }
+    }
 }
