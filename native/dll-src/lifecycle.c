@@ -309,6 +309,10 @@ nar_bool_t meta__update(nar_runtime_t rt) {
     }
 
     state_t *state = nar->get_metadata(rt, NAR_META__Nar_Program__state);
+    if (state == NULL) {
+        return false;
+    }
+
     if (!keep_alive) {
         state->alive = false;
     }
